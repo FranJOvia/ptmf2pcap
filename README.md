@@ -52,6 +52,7 @@ Note that I'm not including an .sh script equivalent to the .bat script, since i
 | Diameter       | Transport protocol is assumed to be SCTP |
 | UserInterface  | Frames with content different from SIP, DNS, Diameter or RTP are treated as system log frames and embedded into Syslog messages with source and destination IPs set to 0.0.0.0. Comments for SIP and Diameter PTMF File Types apply to UserInterface frames with SIP and Diameter content too |
 | IP             | Transparent conversion (since the IP PTMF frames contain the whole Ethernet packet) |
+| NGAP TRACE_5G_NG | Transport protocol is assumed to be SCTP with fixed IP addresses. All additional headers are ignored. |
 
 The information in next section is very useful to understad the comments from the table above.
 
