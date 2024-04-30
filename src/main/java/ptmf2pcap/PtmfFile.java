@@ -29,16 +29,18 @@ public class PtmfFile {
 	public static final String FILETYPE_USERINTERFACE = "UserInterface";
 	public static final String FILETYPE_SIP = "SIP";
 	public static final String FILETYPE_DIAMETER = "Diameter";
+	public static final String FILETYPE_NGAP = "TRACE_5G_NG (NGAP)"; //TRACE_5G_NG
 	public static final String FILETYPE_IP = "IP";
 	public static final String FILETYPE_UNKNOWN = "UNKNOWN";
 	private static final String[][] FILETYPE_TABLE = {
 		{"01", FILETYPE_SIP},
 		{"03", FILETYPE_DIAMETER},
+		{"06", FILETYPE_NGAP},
 		{"10", FILETYPE_USERINTERFACE},
 		{"53", FILETYPE_IP}
 	};
 	private static HashMap<String,String> FILETYPE_MAP = createHashMap(FILETYPE_TABLE);
-	
+
 	/**
 	 * Creates a HashMap reading the (key, value) pairs from an input table
 	 *
@@ -52,45 +54,47 @@ public class PtmfFile {
 		};
 		return hashMap;
 	};
-	
+
 	/*
 	 * Instance variables
 	 */
 	private byte[] byteContent;
-	
+
 	/**
 	 * Constructor method taking a byte array as input parameter
 	 * The file type is inferred from the byte content
-	 * 
+	 *
 	 * @param	byteContent	a byte array with the content of the file
 	 * @return				the newly created PtmfFile object
 	 */
 	public PtmfFile(byte[] byteContent) {
 		this.byteContent = byteContent;
 	};
-	
+
 	/**
 	 * Infers the file type by analysing the byte content
 	 * It is only able to recognize some of the file types generated
 	 * by Huawei SBCs (at least those from SE2900 series)
-	 * 
+	 *
 	 * @return	The file type
 	 */
 	public String getFileType() {
 		String fileType = FILETYPE_MAP.get(this.getFileTypeHex());
+		System.out.println("FileType: "+fileType);
+		//System.out.println(this.toString());
 		if(fileType == null) {
 			fileType = FILETYPE_UNKNOWN;
 		}
 		return fileType;
 	};
-	
+
 	/**
 	 * @return	The byte content of the PtmfFile object
 	 */
 	public byte[] getByteContent() {
 		return this.byteContent;
 	};
-	
+
 	/**
 	 * Returns the content of the PtmfFile object represented as an Hex String
 	 *
@@ -99,7 +103,7 @@ public class PtmfFile {
 	public String toRawString() {
 		return ByteUtils.bytesToHexString(this.getByteContent());
 	};
-	
+
 	/**
 	 * Returns a string representation of the PTMF file
 	 * Hex representation is still used the same as toRawString() method does,
@@ -129,7 +133,7 @@ public class PtmfFile {
 		};
 		return stringBuilder.toString();
 	};
-	
+
 	/**
 	 * Returns the header of the PTMF file
 	 *
@@ -138,7 +142,7 @@ public class PtmfFile {
 	public byte[] getHeader() {
 		return ByteUtils.split(this.getByteContent(), FRAME_SEPARATOR_BYTES).get(0);
 	};
-	
+
 	/**
 	 * Returns the file type represented as a byte array
 	 *
@@ -147,7 +151,7 @@ public class PtmfFile {
 	public byte[] getFileTypeBytes() {
 		return ByteUtils.subarray(this.getByteContent(), FILETYPE_OFFSET, FILETYPE_LENGTH);
 	};
-	
+
 	/**
 	 * Returns the file type represented as an Hex String
 	 *
@@ -156,7 +160,7 @@ public class PtmfFile {
 	public String getFileTypeHex() {
 		return ByteUtils.bytesToHexString(this.getFileTypeBytes());
 	};
-	
+
 	/**
 	 * Checks whether the input fileType is supported or not
 	 *
@@ -164,7 +168,7 @@ public class PtmfFile {
 	 * @return				whether it is supported or not
 	 */
 	public static boolean isSupportedFileType(String fileType) {
-		if(fileType.equals(FILETYPE_USERINTERFACE) || fileType.equals(FILETYPE_SIP) || fileType.equals(FILETYPE_DIAMETER) || fileType.equals(FILETYPE_IP)) {
+		if(fileType.equals(FILETYPE_USERINTERFACE) || fileType.equals(FILETYPE_SIP) || fileType.equals(FILETYPE_DIAMETER) || fileType.equals(FILETYPE_IP) || fileType.equals(FILETYPE_NGAP)) {
 			return true;
 		} else {
 			return false;
@@ -190,7 +194,9 @@ public class PtmfFile {
 			ptmfFrame = new DiameterPtmfFrame(byteFrame, frameIndex);
 		} else if(fileType.equals(FILETYPE_IP)) {
 			ptmfFrame = new IpPtmfFrame(byteFrame, frameIndex);
-		} else {
+		} else if(fileType.equals(FILETYPE_NGAP)) {
+			ptmfFrame = new NgapPtmfFrame(byteFrame, frameIndex);
+		} else{
 			ptmfFrame = null;
 		};
 		return ptmfFrame;
@@ -232,7 +238,7 @@ public class PtmfFile {
 		};
 		return ptmfFrameList;
 	};
-	
+
 	/**
 	 * Returns a PCAP file containing all the PTMF frames that the PtmfFile contains
 	 *
